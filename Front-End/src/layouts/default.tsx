@@ -17,7 +17,7 @@
  */
 
 import React, { FunctionComponent, PropsWithChildren, ReactElement } from "react";
-import FOOTER_LOGOS from "../images/footer.png";
+import FOOTER_LOGOS from "../images/logo.png";
 
 /**
  * Decoded ID Token Response component Prop types interface.
@@ -56,7 +56,7 @@ export const DefaultLayout: FunctionComponent<PropsWithChildren<DefaultLayoutPro
             <div className="container">
                 <div className="header-title">
                     <h1>
-                        React SPA Authentication Sample
+                        Event Sphere Application
                     </h1>
                 </div>
                 {

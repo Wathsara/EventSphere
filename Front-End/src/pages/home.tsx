@@ -19,7 +19,7 @@
 import { BasicUserInfo, Hooks, useAuthContext } from "@asgardeo/auth-react";
 import React, { FunctionComponent, ReactElement, useCallback, useEffect, useState } from "react";
 import { default as authConfig } from "../config.json";
-import REACT_LOGO from "../images/react-logo.png";
+import LOGO from "../images/logo.png";
 import { DefaultLayout } from "../layouts/default";
 import { AuthenticationResponse } from "../components";
 import { useLocation } from "react-router-dom";
@@ -166,15 +166,10 @@ export const HomePage: FunctionComponent = (): ReactElement => {
                     : (
                         <div className="content">
                             <div className="home-image">
-                                <img alt="react-logo" src={ REACT_LOGO } className="react-logo-image logo"/>
+                                <img alt="logo" src={ LOGO } className="react-logo-image logo"/>
                             </div>
                             <h4 className={ "spa-app-description" }>
-                                Sample demo to showcase authentication for a Single Page Application
-                                via the OpenID Connect Authorization Code flow,
-                                which is integrated using the&nbsp;
-                                <a href="https://github.com/asgardeo/asgardeo-auth-react-sdk" target="_blank" rel="noreferrer noopener">
-                                    Asgardeo Auth React SDK
-                                </a>.
+                                EventSphere is more than just an event management tool; it's a gateway to creating memorable and effective gatherings
                             </h4>
                             <button
                                 className="btn primary"
