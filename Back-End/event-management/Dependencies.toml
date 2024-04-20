@@ -32,14 +32,6 @@ dependencies = [
 
 [[package]]
 org = "ballerina"
-name = "cloud"
-version = "2.11.3"
-modules = [
-	{org = "ballerina", packageName = "cloud", moduleName = "cloud"}
-]
-
-[[package]]
-org = "ballerina"
 name = "constraint"
 version = "1.5.0"
 dependencies = [
@@ -369,7 +361,6 @@ org = "wathsara"
 name = "event_management"
 version = "0.1.0"
 dependencies = [
-	{org = "ballerina", name = "cloud"},
 	{org = "ballerina", name = "http"},
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "sql"},

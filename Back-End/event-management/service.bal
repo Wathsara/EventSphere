@@ -10,21 +10,27 @@ configurable string user = ?;
 configurable string password = ?;
 configurable string database = ?;
 
-type EventInput record {
+type PublicationInput record {
     string title;
     string description;
-    string startTime;
-    string endTime;
+    string publicationType;
+    string paperSubmissionDate;
+    string conferenceDate;
     string location;
+    string externalLink;
+    string conferenceRank;
 };
 
-type Event record {|
+type Publication record {|
     string uuid;
     string title;
+    string publicationType;
     string description;
-    string startTime;
-    string endTime;
+    string paperSubmissionDate;
+    string conferenceDate;
     string location;
+    string externalLink;
+    string conferenceRank;
 |};
 
 service / on new http:Listener(8080) {
@@ -34,29 +40,37 @@ service / on new http:Listener(8080) {
         self.db = check new (host, user, password, database, port);
     }
 
-    resource function post events(@http:Payload EventInput eventInput) returns Event|error {
+    resource function post publications(@http:Payload PublicationInput publicationInput) returns Publication|error {
 
-        Event event = {
+        Publication publication = {
             uuid:  uuid:createType1AsString(),
-            title: eventInput.title,
-            description: eventInput.description,
-            startTime: eventInput.startTime,
-            endTime: eventInput.endTime,
-            location: eventInput.location
+            title: publicationInput.title,
+            description: publicationInput.description,
+            paperSubmissionDate: publicationInput.paperSubmissionDate,
+            conferenceDate: publicationInput.conferenceDate,
+            location: publicationInput.location,
+            externalLink: publicationInput.externalLink,
+            conferenceRank: publicationInput.conferenceRank,
+            publicationType: publicationInput.publicationType
         };
         _ = check self.db->execute(`
-            INSERT INTO Events (uuid, title, description, startTime, endTime, location)
-            VALUES (${event.uuid}, ${event.title}, ${event.description}, ${event.startTime}, ${event.endTime}, ${event.location});`);
-        return event;
+            INSERT INTO Publications (uuid, title, publicationType, description, paperSubmissionDate, 
+            conferenceDate, externalLink, conferenceRank, location)
+            VALUES (${publication.uuid}, ${publication.title}, ${publication.publicationType}, ${publication.description}, 
+            ${publication.paperSubmissionDate}, ${publication.conferenceDate}, ${publication.externalLink},
+            ${publication.conferenceRank}, ${publication.location});`);
+        return publication;
     }
 
-    resource function get events() returns Event[]|error {
-        stream<Event, sql:Error?> eventStream = self.db->query(`SELECT uuid, title, description, startTime, endTime, location FROM Events`);
-        return from Event event in eventStream select event;
+    resource function get publications() returns Publication[]|error {
+        stream<Publication, sql:Error?> publicationStream = self.db->query(`SELECT uuid, title, publicationType, description, paperSubmissionDate, 
+            conferenceDate, externalLink, conferenceRank, location FROM Publications`);
+        return from Publication publication in publicationStream select publication;
     }
 
-    resource function get event/[string uuid]() returns Event|http:NotFound|error {
-        Event|sql:Error result = self.db->queryRow(`SELECT uuid, title, description, startTime, endTime, location FROM Events WHERE uuid = ${uuid}`);
+    resource function get publication/[string uuid]() returns Publication|http:NotFound|error {
+        Publication|sql:Error result = self.db->queryRow(`SELECT uuid, title, publicationType, description, paperSubmissionDate, 
+            conferenceDate, externalLink, conferenceRank, location FROM Publications WHERE uuid = ${uuid}`);
         if result is sql:NoRowsError {
             return http:NOT_FOUND;
         } else {
@@ -64,9 +78,9 @@ service / on new http:Listener(8080) {
         }
     }
 
-    resource function delete event/[string uuid]() returns http:NoContent|http:NotFound|error {
+    resource function delete publication/[string uuid]() returns http:NoContent|http:NotFound|error {
 
-        sql:ExecutionResult result = check self.db->execute(`DELETE FROM Events WHERE uuid = ${uuid}`);
+        sql:ExecutionResult result = check self.db->execute(`DELETE FROM Publications WHERE uuid = ${uuid}`);
         // Check if any rows were affected
         if (result.affectedRowCount > 0) {
             return http:NO_CONTENT;
@@ -75,23 +89,27 @@ service / on new http:Listener(8080) {
         }
     }
 
-    resource function put event/[string uuid](@http:Payload EventInput eventInput) returns Event|http:NotFound|error {
+    resource function put publication/[string uuid](@http:Payload PublicationInput publicationInput) returns Publication|http:NotFound|error {
         
-        Event event = {
+        Publication publication = {
             uuid:  uuid,
-            title: eventInput.title,
-            description: eventInput.description,
-            startTime: eventInput.startTime,
-            endTime: eventInput.endTime,
-            location: eventInput.location
+            title: publicationInput.title,
+            description: publicationInput.description,
+            paperSubmissionDate: publicationInput.paperSubmissionDate,
+            conferenceDate: publicationInput.conferenceDate,
+            location: publicationInput.location,
+            externalLink: publicationInput.externalLink,
+            conferenceRank: publicationInput.conferenceRank,
+            publicationType: publicationInput.publicationType
         };
 
-        sql:ExecutionResult result = check self.db->execute(`UPDATE Events SET title=${event.title}, 
-                description=${event.description}, startTime=${event.startTime}, endTime=${event.endTime}, 
-                location=${event.location} WHERE uuid = ${uuid}`);
+        sql:ExecutionResult result = check self.db->execute(`UPDATE Publications SET title=${publication.title}, 
+                description=${publication.description}, paperSubmissionDate=${publication.paperSubmissionDate}, conferenceDate=${publication.conferenceDate}, 
+                externalLink=${publication.externalLink}, conferenceRank=${publication.conferenceRank}, publicationType=${publication.publicationType},
+                location=${publication.location} WHERE uuid = ${uuid}`);
         // Check if any rows were affected
         if (result.affectedRowCount > 0) {
-            return event;
+            return publication;
         } else {
             return http:NOT_FOUND;
         }
