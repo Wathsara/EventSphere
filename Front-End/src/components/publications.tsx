@@ -149,6 +149,7 @@ export const Publications: FunctionComponent<AuthenticationResponsePropsInterfac
     };
 
     const showUpdateModal = (publication: Publication) => {
+        setCurrentPublication(null)
         setCurrentPublication(publication);
         setIsUpdateModalVisible(true);
     };
@@ -174,11 +175,11 @@ export const Publications: FunctionComponent<AuthenticationResponsePropsInterfac
             await updatePublication(currentPublication.uuid, values, derivedResponse?.accessToken);
             const pubs = await getPublications(derivedResponse?.accessToken);
             setPublications(pubs);
-            createForm.resetFields();  // Reset form after submission
+            form.resetFields();  // Reset form after submission
             setIsUpdateModalVisible(false);
             openNotification('Success', 'Publication updated successfully!');
         } catch (error) {
-            openDangerNotification('Errir', 'Error updating publication!');
+            openDangerNotification('Error', 'Error updating publication!');
         }
     };
 
@@ -238,6 +239,19 @@ export const Publications: FunctionComponent<AuthenticationResponsePropsInterfac
     };
     
 
+    // Reset and set form values whenever currentPublication changes
+    useEffect(() => {
+        if (currentPublication) {
+            form.setFieldsValue({
+                ...currentPublication,
+                conferenceDate: currentPublication.conferenceDate ? moment(currentPublication.conferenceDate) : null,
+                paperSubmissionDate: currentPublication.paperSubmissionDate ? moment(currentPublication.paperSubmissionDate) : null
+            });
+        } else {
+            form.resetFields(); // This ensures the form is cleared when currentPublication is null
+        }
+    }, [currentPublication, form]);
+    
     return (
         <>
             <Layout>
@@ -303,7 +317,7 @@ export const Publications: FunctionComponent<AuthenticationResponsePropsInterfac
                                     <Input placeholder="A" />
                                 </Form.Item>
                                 <Button type="primary" htmlType="submit">
-                                    Submit
+                                    Create
                                 </Button>
                             </Form>
                         </Modal>
@@ -353,8 +367,8 @@ export const Publications: FunctionComponent<AuthenticationResponsePropsInterfac
 
                     </div>
                 </Content>
-                <Modal title="Update Conference" visible={isUpdateModalVisible} onCancel={() => setIsUpdateModalVisible(false)} onOk={() => form.submit()}>
-                    {currentPublication && (
+                <Modal title="Update Conference" visible={isUpdateModalVisible} onCancel={() => setIsUpdateModalVisible(false)} footer={null} >
+                    {currentPublication != null && (
                         <Form form={form} onFinish={handleUpdate}
                             initialValues={{
                                 ...currentPublication,
@@ -389,6 +403,9 @@ export const Publications: FunctionComponent<AuthenticationResponsePropsInterfac
                             <Form.Item name="conferenceRank" label="Rank" >
                                 <Input placeholder="A" />
                             </Form.Item>
+                            <Button type="primary" htmlType="submit">
+                                    Update
+                            </Button>
                         </Form>
                     )}
                 </Modal>

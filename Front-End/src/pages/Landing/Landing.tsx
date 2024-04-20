@@ -1,5 +1,5 @@
 import React, { FunctionComponent, ReactElement } from "react";
-import { Button, Layout, Carousel, theme, Card, Avatar, Rate } from 'antd';
+import { Button, Layout, Carousel, theme, Card, Avatar, Rate, Row, Col } from 'antd';
 const { Header, Content, Footer } = Layout;
 const { Meta } = Card;
 import logo from '../../images/logo.png';
@@ -60,13 +60,11 @@ const users = [
 ];
 
 const cardStyle = {
-    display: 'flex',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    width: '100%',
-    backgroundColor: '#f0f2f5',
-    padding: '10px'
+    margin: '0 auto',  // Center the row if needed
+    maxWidth: '1200px',  // Maximum width of the grid
+    padding: '20px'  // Padding around the grid
 };
+
 
 const items = [{ key: 1, label: "nav 1" }]
 
@@ -115,20 +113,24 @@ export const HeaderMain: FunctionComponent = ({ onLoginClick }): ReactElement =>
                         </div>
                     </Carousel>
                     <div style={cardStyle}>
-                        {users.map((user, index) => (
-                            <Card key={index} bordered={false} style={{ width: 300 }}>
-                                <Meta
-                                    avatar={<Avatar src={user.avatar} size={84} />}
-                                    title={user.name}
-                                    description={
-                                        <>
-                                            <Rate disabled defaultValue={user.rating} />
-                                            <p>{user.review}</p>
-                                        </>
-                                    }
-                                />
-                            </Card>
-                        ))}
+                        <Row gutter={16}>  {/* Provides spacing between columns */}
+                            {users.map((user, index) => (
+                                <Col key={index} xs={24} sm={12} lg={8}>  {/* Responsive column sizes */}
+                                    <Card bordered={false} style={{ width: '100%', marginBottom: 16 }}>  {/* Set width to 100% for full column width usage */}
+                                        <Meta
+                                            avatar={<Avatar src={user.avatar} size={84} />}
+                                            title={user.name}
+                                            description={
+                                                <>
+                                                    <Rate disabled defaultValue={user.rating} />
+                                                    <p>{user.review}</p>
+                                                </>
+                                            }
+                                        />
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Row>
                     </div>
                 </div>
             </Content>
