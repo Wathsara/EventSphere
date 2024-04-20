@@ -69,7 +69,6 @@ const cardStyle = {
 };
 
 const items = [{ key: 1, label: "nav 1" }]
-console.log(items)
 
 export const HeaderMain: FunctionComponent = ({ onLoginClick }): ReactElement => {
     const {

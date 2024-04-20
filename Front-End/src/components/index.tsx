@@ -1,1 +1,1 @@
-export * from "./authentication-response";
+export * from "./publications";

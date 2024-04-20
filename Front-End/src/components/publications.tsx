@@ -1,8 +1,7 @@
 import { BasicUserInfo } from "@asgardeo/auth-react";
-import React, { FunctionComponent, ReactElement, useState } from "react";
-import { JsonViewer } from '@textea/json-viewer'
+import React, { FunctionComponent, ReactElement, useState, useEffect } from "react";
 import {
-    Button, Dropdown, Menu, Avatar, Layout, theme, Modal,
+    Button, Dropdown, Menu, Avatar, Layout, theme, Modal, notification,
     Form, Input, Card, Row, Col, DatePicker, Select, Tooltip
 } from 'antd';
 import logo from '../images/logo.png';
@@ -12,8 +11,11 @@ import {
     LinkOutlined, StarOutlined, ProfileOutlined, EditOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
+import { createPublication, getPublications, deletePublication, updatePublication } from '../api/publicationsService';
+import { Publication } from '../api/publication';
+import { default as config } from "../config.json";
 
-const { Header, Content, Footer } = Layout;
+const { Header, Content } = Layout;
 
 /**
  * Decoded ID Token Response component Prop types interface.
@@ -46,39 +48,23 @@ export interface DerivedAuthenticationResponseInterface {
 }
 
 /**
- * Displays the derived Authentication Response from the SDK.
+ * Manage the Publications.
  *
  * @param {AuthenticationResponsePropsInterface} props - Props injected to the component.
  *
  * @return {React.ReactElement}
  */
-export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePropsInterface> = (
+export const Publications: FunctionComponent<AuthenticationResponsePropsInterface> = (
     props: AuthenticationResponsePropsInterface
 ): ReactElement => {
 
-    // const calculateCountdown = (endDate) => {
-    //     const end = moment(endDate);
-    //     const now = moment();  // Get the current time
-    //     const duration = moment.duration(end.diff(now)); // Create a duration from the difference
-    //     const days = duration.asDays(); // Get the duration in days
-    //     return Math.floor(days); // Return the number of full days
-    // };
+    const {
+        onLogOutClick,
+        derivedResponse
+    } = props;
 
-    const handleUpdate = (values) => {
-        const updatedConferences = conferences.map(conference =>
-            conference.id === currentConference.id ? { ...conference, ...values, conferenceDate: values.conferenceDate.format('YYYY-MM-DD') } : conference
-        );
-        setConferences(updatedConferences);
-        setIsModalVisible(false);
-    };
-
-    const handleDelete = (conferenceId) => {
-        setConferences(conferences.filter(conference => conference.id !== conferenceId));
-    };
-
-    // Styles for the card and its elements
     const cardStyle = {
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+        boxShadow: '0 8px 8px rgba(0,0,0,0.1)',
         borderRadius: '8px',
         margin: '10px',
         overflow: 'hidden',
@@ -89,7 +75,7 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
     };
 
     const contentStyle = {
-        padding: '20px'
+        padding: '10px'
     };
 
     const iconStyle = {
@@ -131,112 +117,86 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
         fontWeight: 'bold'
     };
 
-    const dummyConferences = [
-        {
-            id: '1',
-            title: "Tech Innovate 2024",
-            organization: "Tech World Inc.",
-            type: "Conference",
-            description: "Explore cutting-edge tech innovations.",
-            location: "San Francisco, CA",
-            paperSubmissionDate: "2024-12-01",
-            conferenceDate: "2024-03-15",
-            externalLink: "https://techinnovate2024.com",
-            rank: "A"
-        },
-        {
-            id: '2',
-            title: "Global Health Summit",
-            organization: "Health Org",
-            type: "Conference",
-            description: "Addressing global health challenges and solutions.",
-            location: "Geneva, Switzerland",
-            paperSubmissionDate: "2023-10-20",
-            conferenceDate: "2024-05-10",
-            externalLink: "https://globalhealth2024.com",
-            rank: "A*"
-        },
-        {
-            id: '3',
-            title: "Global Health Summit - 3",
-            type: "Conference",
-            description: "Addressing global health challenges and solutions.",
-            location: "Geneva, Switzerland",
-            paperSubmissionDate: "2023-10-20",
-            conferenceDate: "2024-05-10",
-            externalLink: "https://globalhealth2024.com",
-            rank: "A*"
-        },
-        {
-            id: '4',
-            title: "Global Health Summit - 4",
-            organization: "Health Org",
-            type: "Conference",
-            description: "Addressing global health challenges and solutions.",
-            location: "Geneva, Switzerland",
-            paperSubmissionDate: "2023-10-20",
-            conferenceDate: "2024-05-10",
-            externalLink: "https://globalhealth2024.com",
-            rank: "A*"
-        },
-        {
-            id: '5',
-            title: "Global Health Summit -5",
-            organization: "Health Org",
-            type: "Conference",
-            description: "Addressing global health challenges and solutions.",
-            location: "Geneva, Switzerland",
-            paperSubmissionDate: "2023/10/20",
-            conferenceDate: "2024/05/10",
-            externalLink: "https://globalhealth2024.com",
-            rank: "A"
+    const [publications, setPublications] = useState<Publication[]>([]);
+
+    useEffect(() => {
+        if (derivedResponse?.accessToken) { // Only run if accessToken is available
+            const fetchPublications = async () => {
+                const pubs = await getPublications(derivedResponse.accessToken);
+                setPublications(pubs);
+            };
+            fetchPublications();
         }
-    ];
+    }, [derivedResponse?.accessToken]); // Depend on accessToken
 
-    const [conferences, setConferences] = useState(dummyConferences);
+
+    const handleDelete = async (uuid: string) => {
+        try {
+            await deletePublication(uuid, derivedResponse?.accessToken);
+            setPublications(publications.filter(publication => publication.uuid !== uuid));
+            openNotification('Success', 'Publication deleted successfully!');
+        } catch (error) {
+            openDangerNotification('Errir', 'Error deleting publication!');
+        }
+    };
+
     const [isModalVisible, setIsModalVisible] = useState(false);
-
     const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
-    const [currentConference, setCurrentConference] = useState(null);
+    const [currentPublication, setCurrentPublication] = useState(null);
 
     const showModal = () => {
         setIsModalVisible(true);
     };
 
-    const showUpdateModal = (conference) => {
-        setCurrentConference(conference);
+    const showUpdateModal = (publication: Publication) => {
+        setCurrentPublication(publication);
         setIsUpdateModalVisible(true);
     };
 
-    const handleOk = (values: { name: string; description: string; }) => {
-        setConferences([...conferences, { ...values, conferenceDate: values.conferenceDate.format('YYYY-MM-DD') }]);
-        setIsModalVisible(false);
+    const [createForm] = Form.useForm();
+
+    const handleOk = async (values: Publication) => {
+        try {
+            const data = await createPublication(values, derivedResponse?.accessToken);
+            console.log("Publication created successfully:", data);
+            const pubs = await getPublications(derivedResponse?.accessToken);
+            setPublications(pubs);
+            createForm.resetFields();  // Reset form after submission
+            setIsModalVisible(false);
+            openNotification('Success', 'Publication created successfully!');
+        } catch (error) {
+            openDangerNotification('Errir', 'Error creating publication!');
+        }
+    };
+
+    const handleUpdate = async (values: Publication) => {
+        try {
+            await updatePublication(currentPublication.uuid, values, derivedResponse?.accessToken);
+            const pubs = await getPublications(derivedResponse?.accessToken);
+            setPublications(pubs);
+            createForm.resetFields();  // Reset form after submission
+            setIsUpdateModalVisible(false);
+            openNotification('Success', 'Publication updated successfully!');
+        } catch (error) {
+            openDangerNotification('Errir', 'Error updating publication!');
+        }
     };
 
     const handleCancel = () => {
         setIsModalVisible(false);
     };
 
-    const layout = {
-        labelCol: { span: 6 },
-        wrapperCol: { span: 16 },
-    };
-    const tailLayout = {
-        wrapperCol: { offset: 6, span: 16 },
-    };
-
-    const {
-        onLogOutClick,
-        derivedResponse
-    } = props;
-
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
 
+    const handleMyAccountClick = () => {
+        window.open(config.myAccountUrl, '_blank');
+    };
+
     const menu = (
         <Menu>
-            <Menu.Item key="myaccount" onClick={onLogOutClick}>
+            <Menu.Item key="myaccount" onClick={handleMyAccountClick}>
                 My Account
             </Menu.Item>
             <Menu.Item key="logout" onClick={onLogOutClick}>
@@ -245,6 +205,39 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
         </Menu>
     );
     const [form] = Form.useForm();
+
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Filtered publications based on search term
+    const filteredPublications = publications.filter(pub =>
+        pub.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const openNotification = (message:String, description: String) => {
+        notification.success({
+            message: message,
+            description: description,
+            placement: 'topRight',
+            duration: 3, // duration in seconds
+            style: { 
+                textAlign: "left"
+            },
+        });
+    };
+
+    const openDangerNotification = (message:String, description: String) => {
+        notification.success({
+            message: message,
+            description: description,
+            placement: 'topRight',
+            duration: 3, // duration in seconds
+            style: { 
+                textAlign: "left"
+            },
+        });
+    };
+    
+
     return (
         <>
             <Layout>
@@ -271,15 +264,21 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                             borderRadius: borderRadiusLG,
                         }}
                     >
+                        <Input
+                            placeholder="Search by title..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ margin: '20px', width: '300px' }}
+                        />
                         <Button type="primary" onClick={showModal}>
-                            Add New Conference
+                            + New Publication
                         </Button>
                         <Modal title="Add New Conference" visible={isModalVisible} onCancel={handleCancel} footer={null}>
-                            <Form onFinish={handleOk} layout="vertical">
+                            <Form form={createForm} onFinish={handleOk} layout="vertical">
                                 <Form.Item name="title" label="Title" rules={[{ required: true }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+                                <Form.Item name="publicationType" label="publication Type" rules={[{ required: true }]}>
                                     <Select>
                                         <Option value="Conference">Conference</Option>
                                         <Option value="Journal">Journal</Option>
@@ -300,7 +299,7 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                                 <Form.Item name="externalLink" label="External Link">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item name="rank" label="Rank" >
+                                <Form.Item name="conferenceRank" label="Rank" >
                                     <Input placeholder="A" />
                                 </Form.Item>
                                 <Button type="primary" htmlType="submit">
@@ -310,37 +309,40 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                         </Modal>
 
                         <Row gutter={16} style={{ marginTop: 20 }}>
-                            {conferences.map((conference, index) => (
-                                <Col key={index} xs={24} sm={12} lg={8}>
+                            {filteredPublications.map((pub) => (
+                                <Col key={pub.uuid} xs={24} sm={12} lg={8}>
                                     <Card
                                         hoverable
                                         style={cardStyle}
                                         cover={
-                                            <h3><ProfileOutlined style={iconStyle} />{conference.title}</h3>
+                                            <div style={{ padding: '25px' }}>
+                                                <h3><ProfileOutlined style={{ marginRight: '8px' }} />{pub.title}</h3>
+                                            </div>
+
                                         }
                                     >
                                         <div style={contentStyle}>
-                                            <p>{conference.description}</p>
-                                            <p><EnvironmentOutlined style={iconStyle} />{conference.location}</p>
-                                            <p><LinkOutlined style={iconStyle} /><a href={conference.externalLink} target="_blank" rel="noopener noreferrer">More Info</a></p>
+                                            <p>{pub.description}</p>
+                                            <p><EnvironmentOutlined style={iconStyle} />{pub.location}</p>
+                                            <p><LinkOutlined style={iconStyle} /><a href={pub.externalLink} target="_blank" rel="noopener noreferrer">More Info</a></p>
                                         </div>
                                         <div style={footerStyle}>
-                                            <span><CalendarOutlined />Submission: <br />{conference.paperSubmissionDate} </span>
-                                            <span><CalendarOutlined />Event: <br />{conference.conferenceDate} </span>
+                                            <span><CalendarOutlined /> Submission <br />{pub.paperSubmissionDate} </span>
+                                            <span><CalendarOutlined /> Event <br />{pub.conferenceDate} </span>
                                         </div>
                                         <div style={rankStyle}>
                                             <Tooltip title="Conference Rank">
-                                                <StarOutlined /> {conference.rank}
+                                                <StarOutlined /> {pub.conferenceRank}
                                             </Tooltip>
                                         </div>
                                         <div style={typeStyle}>
-                                            {conference.type}
+                                            {pub.publicationType}
                                         </div>
                                         <div>
-                                            <Button type="primary" ghost icon={<EditOutlined />} onClick={() => showUpdateModal(conference)}>
+                                            <Button type="primary" ghost icon={<EditOutlined />} onClick={() => showUpdateModal(pub)}>
                                                 Update
                                             </Button>
-                                            <Button style={{ margin: '10px' }} danger ghost icon={<DeleteOutlined />} onClick={() => handleDelete(conference.id)}>
+                                            <Button style={{ margin: '10px' }} danger ghost icon={<DeleteOutlined />} onClick={() => handleDelete(pub.uuid)}>
                                                 Delete
                                             </Button>
                                         </div>
@@ -352,18 +354,18 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                     </div>
                 </Content>
                 <Modal title="Update Conference" visible={isUpdateModalVisible} onCancel={() => setIsUpdateModalVisible(false)} onOk={() => form.submit()}>
-                    {currentConference && (
+                    {currentPublication && (
                         <Form form={form} onFinish={handleUpdate}
                             initialValues={{
-                                ...currentConference,
-                                conferenceDate: currentConference.conferenceDate ? moment(currentConference.conferenceDate) : null,
-                                paperSubmissionDate: currentConference.paperSubmissionDate ? moment(currentConference.paperSubmissionDate) : null
+                                ...currentPublication,
+                                conferenceDate: currentPublication.conferenceDate ? moment(currentPublication.conferenceDate) : null,
+                                paperSubmissionDate: currentPublication.paperSubmissionDate ? moment(currentPublication.paperSubmissionDate) : null
                             }}
                             layout="vertical">
                             <Form.Item name="title" label="Title">
                                 <Input />
                             </Form.Item>
-                            <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+                            <Form.Item name="publicationType" label="Type" rules={[{ required: true }]}>
                                 <Select>
                                     <Option value="Conference">Conference</Option>
                                     <Option value="Journal">Journal</Option>
@@ -379,12 +381,12 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                                 <DatePicker />
                             </Form.Item>
                             <Form.Item name="conferenceDate" label="Conference Date/Journal Publication Date" rules={[{ required: true }]}>
-                                <DatePicker/>
+                                <DatePicker />
                             </Form.Item>
                             <Form.Item name="externalLink" label="External Link">
                                 <Input />
                             </Form.Item>
-                            <Form.Item name="rank" label="Rank" >
+                            <Form.Item name="conferenceRank" label="Rank" >
                                 <Input placeholder="A" />
                             </Form.Item>
                         </Form>

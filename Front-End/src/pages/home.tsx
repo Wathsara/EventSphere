@@ -1,27 +1,9 @@
-/**
- * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
- *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 import { BasicUserInfo, Hooks, useAuthContext } from "@asgardeo/auth-react";
 import React, { FunctionComponent, ReactElement, useCallback, useEffect, useState } from "react";
 import { default as authConfig } from "../config.json";
 import LOGO from "../images/logo.png";
 import { DefaultLayout } from "../layouts/default";
-import { AuthenticationResponse } from "../components";
+import { Publications } from "../components";
 import { useLocation } from "react-router-dom";
 import { LogoutRequestDenied } from "../components/LogoutRequestDenied";
 import { USER_DENIED_LOGOUT } from "../constants/errors";
@@ -30,6 +12,7 @@ import { HeaderMain } from "./Landing/Landing";
 interface DerivedState {
     authenticateResponse: BasicUserInfo,
     idToken: string[],
+    accessToken: string,
     decodedIdTokenHeader: string,
     decodedIDTokenPayload: Record<string, string | number | boolean>;
 }
@@ -49,6 +32,7 @@ export const HomePage: FunctionComponent = (): ReactElement => {
         signOut,
         getBasicUserInfo,
         getIDToken,
+        getAccessToken,
         getDecodedIDToken,
         on
     } = useAuthContext();
@@ -70,10 +54,12 @@ export const HomePage: FunctionComponent = (): ReactElement => {
         (async (): Promise<void> => {
             const basicUserInfo = await getBasicUserInfo();
             const idToken = await getIDToken();
+            const accessToken = await getAccessToken();
             const decodedIDToken = await getDecodedIDToken();
 
             const derivedState: DerivedState = {
                 authenticateResponse: basicUserInfo,
+                accessToken: accessToken,
                 idToken: idToken.split("."),
                 decodedIdTokenHeader: JSON.parse(atob(idToken.split(".")[0])),
                 decodedIDTokenPayload: decodedIDToken
@@ -81,7 +67,7 @@ export const HomePage: FunctionComponent = (): ReactElement => {
 
             setDerivedAuthenticationState(derivedState);
         })();
-    }, [ state.isAuthenticated , getBasicUserInfo, getIDToken, getDecodedIDToken ]);
+    }, [ state.isAuthenticated , getBasicUserInfo, getIDToken, getDecodedIDToken, getAccessToken]);
 
     useEffect(() => {
         if(stateParam && errorDescParam) {
@@ -151,7 +137,7 @@ export const HomePage: FunctionComponent = (): ReactElement => {
                 state.isAuthenticated
                     ? (
                         <div>
-                            <AuthenticationResponse
+                            <Publications
                                 onLogOutClick={ () => { handleLogout(); } }
                                 derivedResponse={ derivedAuthenticationState } 
                             />
