@@ -11,6 +11,7 @@ import {
     CalendarOutlined, EnvironmentOutlined, DeleteOutlined,
     LinkOutlined, StarOutlined, ProfileOutlined, EditOutlined
 } from '@ant-design/icons';
+import moment from 'moment';
 
 const { Header, Content, Footer } = Layout;
 
@@ -55,13 +56,13 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
     props: AuthenticationResponsePropsInterface
 ): ReactElement => {
 
-    const calculateCountdown = (endDate) => {
-        const end = new Date(endDate);
-        const now = new Date();
-        const difference = end - now; // difference in milliseconds
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24)); // convert milliseconds to days
-        return days;
-    };
+    // const calculateCountdown = (endDate) => {
+    //     const end = moment(endDate);
+    //     const now = moment();  // Get the current time
+    //     const duration = moment.duration(end.diff(now)); // Create a duration from the difference
+    //     const days = duration.asDays(); // Get the duration in days
+    //     return Math.floor(days); // Return the number of full days
+    // };
 
     const handleUpdate = (values) => {
         const updatedConferences = conferences.map(conference =>
@@ -185,8 +186,8 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
             type: "Conference",
             description: "Addressing global health challenges and solutions.",
             location: "Geneva, Switzerland",
-            paperSubmissionDate: "2023-10-20",
-            conferenceDate: "2024-05-10",
+            paperSubmissionDate: "2023/10/20",
+            conferenceDate: "2024/05/10",
             externalLink: "https://globalhealth2024.com",
             rank: "A"
         }
@@ -278,9 +279,6 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                                 <Form.Item name="title" label="Title" rules={[{ required: true }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item name="organization" label="Organization" rules={[{ required: true }]}>
-                                    <Input />
-                                </Form.Item>
                                 <Form.Item name="type" label="Type" rules={[{ required: true }]}>
                                     <Select>
                                         <Option value="Conference">Conference</Option>
@@ -303,7 +301,7 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                                     <Input />
                                 </Form.Item>
                                 <Form.Item name="rank" label="Rank" >
-                                    <Input placeholder="A"/>
+                                    <Input placeholder="A" />
                                 </Form.Item>
                                 <Button type="primary" htmlType="submit">
                                     Submit
@@ -327,8 +325,8 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                                             <p><LinkOutlined style={iconStyle} /><a href={conference.externalLink} target="_blank" rel="noopener noreferrer">More Info</a></p>
                                         </div>
                                         <div style={footerStyle}>
-                                            <span><CalendarOutlined />Submission: <br />{conference.paperSubmissionDate} <br /> in {calculateCountdown(conference.paperSubmissionDate)} days</span>
-                                            <span><CalendarOutlined />Event: <br />{conference.conferenceDate} <br /> in {calculateCountdown(conference.conferenceDate)} days</span>
+                                            <span><CalendarOutlined />Submission: <br />{conference.paperSubmissionDate} </span>
+                                            <span><CalendarOutlined />Event: <br />{conference.conferenceDate} </span>
                                         </div>
                                         <div style={rankStyle}>
                                             <Tooltip title="Conference Rank">
@@ -354,14 +352,43 @@ export const AuthenticationResponse: FunctionComponent<AuthenticationResponsePro
                     </div>
                 </Content>
                 <Modal title="Update Conference" visible={isUpdateModalVisible} onCancel={() => setIsUpdateModalVisible(false)} onOk={() => form.submit()}>
-                    <Form form={form} onFinish={handleUpdate} initialValues={currentConference}>
-                        <Form.Item name="title" label="Title">
-                            <Input />
-                        </Form.Item>
-                        <Form.Item name="conferenceDate" label="Conference Date">
-                            <DatePicker />
-                        </Form.Item>
-                    </Form>
+                    {currentConference && (
+                        <Form form={form} onFinish={handleUpdate}
+                            initialValues={{
+                                ...currentConference,
+                                conferenceDate: currentConference.conferenceDate ? moment(currentConference.conferenceDate) : null,
+                                paperSubmissionDate: currentConference.paperSubmissionDate ? moment(currentConference.paperSubmissionDate) : null
+                            }}
+                            layout="vertical">
+                            <Form.Item name="title" label="Title">
+                                <Input />
+                            </Form.Item>
+                            <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+                                <Select>
+                                    <Option value="Conference">Conference</Option>
+                                    <Option value="Journal">Journal</Option>
+                                </Select>
+                            </Form.Item>
+                            <Form.Item name="description" label="Description" rules={[{ required: true }]}>
+                                <Input />
+                            </Form.Item>
+                            <Form.Item name="location" label="Location" rules={[{ required: true }]}>
+                                <Input />
+                            </Form.Item>
+                            <Form.Item name="paperSubmissionDate" label="Paper Submission Date" rules={[{ required: true }]}>
+                                <DatePicker />
+                            </Form.Item>
+                            <Form.Item name="conferenceDate" label="Conference Date/Journal Publication Date" rules={[{ required: true }]}>
+                                <DatePicker/>
+                            </Form.Item>
+                            <Form.Item name="externalLink" label="External Link">
+                                <Input />
+                            </Form.Item>
+                            <Form.Item name="rank" label="Rank" >
+                                <Input placeholder="A" />
+                            </Form.Item>
+                        </Form>
+                    )}
                 </Modal>
             </Layout>
         </>
