@@ -33,6 +33,14 @@ type Publication record {|
     string conferenceRank;
 |};
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["*"],
+        allowCredentials: false,
+        maxAge: 84900
+    }
+}
+
 service / on new http:Listener(8080) {
     private final mysql:Client db;
 
