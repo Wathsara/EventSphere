@@ -25,6 +25,7 @@ import { AuthenticationResponse } from "../components";
 import { useLocation } from "react-router-dom";
 import { LogoutRequestDenied } from "../components/LogoutRequestDenied";
 import { USER_DENIED_LOGOUT } from "../constants/errors";
+import { HeaderMain } from "./Landing/Landing";
 
 interface DerivedState {
     authenticateResponse: BasicUserInfo,
@@ -149,37 +150,15 @@ export const HomePage: FunctionComponent = (): ReactElement => {
             {
                 state.isAuthenticated
                     ? (
-                        <div className="content">
+                        <div>
                             <AuthenticationResponse
-                                derivedResponse={ derivedAuthenticationState }
+                                onLogOutClick={ () => { handleLogout(); } }
+                                derivedResponse={ derivedAuthenticationState } 
                             />
-                            <button
-                                className="btn primary mt-4"
-                                onClick={ () => {
-                                    handleLogout();
-                                } }
-                            >
-                                Logout
-                            </button>
                         </div>
                     )
                     : (
-                        <div className="content">
-                            <div className="home-image">
-                                <img alt="logo" src={ LOGO } className="react-logo-image logo"/>
-                            </div>
-                            <h4 className={ "spa-app-description" }>
-                                EventSphere is more than just an event management tool; it's a gateway to creating memorable and effective gatherings
-                            </h4>
-                            <button
-                                className="btn primary"
-                                onClick={ () => {
-                                    handleLogin();
-                                } }
-                            >
-                                Login
-                            </button>
-                        </div>
+                        <HeaderMain onLoginClick={ () => { handleLogin(); } }/>
                     )
             }
         </DefaultLayout>
